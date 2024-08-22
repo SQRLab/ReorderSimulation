@@ -11,7 +11,7 @@ from math import exp, pi as π
 import scipy.constants as con
 import matplotlib.pyplot as plt
 from matplotlib import animation, rc
-from IPython.display import HTML
+#from IPython.display import HTML
 from math import sin, pi as π
 import numba
 

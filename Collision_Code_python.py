@@ -1,11 +1,11 @@
 #2D ion collision simulation code in python. currently there is an issue with low speed collisions that I do not believe was present in earlier
 #iterations. Currently trying to debug this.
 
-from IonChainTools import *
+from tools.IonChainTools import *
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-from sklearn.preprocessing import normalize
+#from sklearn.preprocessing import normalize
 import numba
 
 @numba.njit
@@ -270,7 +270,7 @@ def laserCoolSmoothNew(vf,vl,nu,Ni,dt): # this takes the particle population and
     """
 
     Nnu = len(nu[0,:])
-    vl = normalize([vl])
+    #vl = normalize([vl])
     #v_rms = 0.5737442651757222 #rms velocity limit of 40Ca+ for the S1/2 to P1/2 transition in m/s
     for i in range(Ni):
         #magnitude = sqrt(vf[i,3]^2+vf[i,4]^2)
@@ -361,7 +361,7 @@ def collisionParticlesFields(vf,vc,Ni,ErDC,EzDC,ErAC,EzAC,dr,dz,dt,Nrmid,Nzmid):
 
 
 @numba.njit
-def runFasterCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,vl,I0,nul,dnul,nu0,A,Ti,dtLarge,dCutOut,dCutIn,dtCollision,laserCool=True,eii = 0.01,eid = 0.01):
+def mcCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,dtCollision,eii = 0.01,eid = 0.01):
     """    This sim runs one collisional particle through the trap until it exits, an ion exits, or ions cross
     vf is the ion array, the first index is the ion, the second index is r,z,vr,vz,q,m,polarizability
     rc,zc,vrc,vzc,qc,mc,ac are the initial parameters of the collisional particle
@@ -382,7 +382,6 @@ def runFasterCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,vl
     # we assume that the collisional particle was initialized far enough away to be in the large distance scale zone
     dtLast = dtLarge; dtNow = dtSmall
     dvr = dr/dtNow; dvz = dz/dtNow
-    #nu = laserInt(vf[0,5],I0,nul,dnul,A,nu0,A) # we get those cool laser cooling rates these frequencies better be normal and not angular
     crossTest = 0 # means our ions have not yet crossed paths
     nullFields = np.zeros((Nr,Nz))
     for i in range(Nt):       
@@ -413,10 +412,6 @@ def runFasterCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,vl
             vf[:,0] = 0.0; vf[:,1] = 0.0; vf[:,2] = 0.0; vf[:,3] = 0.0; vf[:,4] = 0.0; vf[:,5] = 1e1; vf[:,6] = 0.0
             vc[:,0] = 0.0; vc[:,1] = 0.0; vc[:,2] = 0.0; vc[:,3] = 0.0; vc[:,4] = 0.0; vc[:,5] = 1e1; vc[:,6] = 0.0
             break
-        # if laserCool:
-        #     #println("Laser cooling! i = ",i) ; println("vf speeds beffore cooling = ",vf[1,3:4])
-        #     vf = laserCoolSmoothNew(vf,vl,nu,Ni,dtNow) # apply smoothed laser cooling (fractional photon emission and average momentum and energy change approximations)
-            #println("vf speeds after cooling = ",vf[1,3:4])
         rs[:,i]=vf[:,0]; rcolls[:,i]=vc[:,0]; zs[:,i]=vf[:,1]; zcolls[:,i]=vc[:,1]
         vrs[:,i]=vf[:,2]; vzs[:,i]=vf[:,3]; vrcolls[:,i]=vc[:,2]; vzcolls[:,i]=vc[:,3]
         if np.any(np.isnan(vf)): # end sim if ion values break
