@@ -2,8 +2,9 @@
 #iterations. Currently trying to debug this.
 
 import sys
-sys.path.append("/Users/caleb/Desktop/SQRL/ReorderSimulation/tools")
-from tools.IonChainTools import *
+sys.path.append("/Users/caleb/Desktop/SQRL/ReorderSimulation")
+
+from ..tools.IonChainTools import * # type: ignore
 import matplotlib.pyplot as plt
 import numpy as np
 import math

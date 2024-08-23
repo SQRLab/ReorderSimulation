@@ -42,6 +42,7 @@ Ezf = np.zeros((Nr, Nz)) ; Erf = np.zeros((Nr, Nz)) # array of electric fields s
 
 # Here we'll make the DC and RF (pseudo)potentials
 RF = makeRF0(m,q,wr,Nr,Nz,Nrmid,dr)
+DC = makeDC(m,q,wz,Nz,Nr,Nzmid,dz)
 nullFields = np.zeros((Nr,Nz))
 print("constants set and modules imported") ; print("Simulation Size = ",Dr,"m in r ", Dz,"m in z")
 
@@ -68,10 +69,6 @@ wz = np.linspace(lower,lower,1)
 
 Ni = np.linspace(2,2,1) # number of trapped ions to loop over. must give whole integers
 Ni = np.round(Ni).astype(int) 
-
-
-DC = makeDC(m,q,wz,Nz,Nr,Nzmid,dz)
-
 
 Ni = 2
 Nc = 1
