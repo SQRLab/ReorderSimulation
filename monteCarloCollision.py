@@ -79,15 +79,16 @@ T = 300
 vMin = 50
 vMax = 7000
 numBins = 1000
+shots = 1000
 
 boltzDist = Boltz(2,T,vMin,vMax,numBins)
 v = np.linspace(vMin,vMax,numBins)
 velocity = random.choices(v,weights=boltzDist)[0]
 
-angles = np.linspace(-np.pi/3,np.pi/3,100)
+angles = np.linspace(-np.pi/2,np.pi/2,100)
 angle_choice = random.choice(angles)
 
-offsets = np.linspace(0,2e-9,100)
+offsets = np.linspace(-2e-9,2e-9,200)
 offset_choice = random.choice(offsets)
 
 ion_collided = random.randint(0,Ni-1)
@@ -101,18 +102,18 @@ else:
 
 vf = makeVf(Ni,1.0*q,m,l,wz,offsetr,offsetz,vbumpr,vbumpz)
 
-r = vtopPos(2,Nrmid,dr) #over-rode from 2 to allow collisions to occur faster, 19999 for right side collision
-
-
-if angle_choice == sign(angle_choice)*np.pi/2: necessaryOffset = 0
-else: necessaryOffset = -np.tan(angle_choice)*r
-
-z = vf[0,1] + necessaryOffset + offset_choice
+max_hypotenuse = 1.5e-5 #limit the distance of the initial position of the collisional particle. this should be choosen based on the size of the simulation space
+r = -np.cos(angle_choice)*max_hypotenuse
+z = vf[ion_collided,1] + np.sin(angle_choice)*max_hypotenuse + offset_choice
 vz=-1*velocity*np.sin(angle_choice) ; vr = np.abs(velocity*np.cos(angle_choice))
 
-print("ion collided with = ",ion_collided); print("additional offset = ",offset_choice)
+print("ion collided with = ",ion_collided+1); print("additional offset = ",offset_choice)
 print("angle = ",angle_choice); print("velocity = ",velocity)
 
 rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls,reorder = mcCollision(vf,r,z,vr,vz,q,mH2,aH2,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,dtCollision) 
 
+#plots the results of the simulation. only use for single runs
 plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,0,100000,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-2e-5,2e-5,-4e-5,4e-5)
+
+#plots a zoomed in image of the collision on a single ion
+#plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,1000,Nt,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-.25e-5,.25e-5,.25e-5,.5e-5)
