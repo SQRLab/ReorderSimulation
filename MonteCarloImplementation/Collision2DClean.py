@@ -1,6 +1,8 @@
 #2D ion collision simulation code in python. currently there is an issue with low speed collisions that I do not believe was present in earlier
 #iterations. Currently trying to debug this.
 
+import sys
+sys.path.append("/Users/caleb/Desktop/SQRL/ReorderSimulation/tools")
 from tools.IonChainTools import *
 import matplotlib.pyplot as plt
 import numpy as np
@@ -432,5 +434,5 @@ def mcCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,d
 #                 break
         #if crossTest>0:
         #    break
-    return rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls, reorder
-    #return reorder
+    #return rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls, reorder
+    return reorder

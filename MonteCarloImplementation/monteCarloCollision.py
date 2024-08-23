@@ -1,10 +1,11 @@
-#from tools.distribution import *
 from Collision2DClean import *
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 import random
+import time
+
 
 def Boltz(m,T,vmin=0,vmax=5000,bins=100):
     amu = 1.66*10**-27
@@ -40,15 +41,18 @@ Dr = Nr*1.5e-9 ; Dz = Nz*4.5e-9 # physical width in m of the sim
 dr = Dr/float(Nr) ; dz = Dz/float(Nz) # width of a cell in z in m
 Ezf = np.zeros((Nr, Nz)) ; Erf = np.zeros((Nr, Nz)) # array of electric fields s
 
+#wz can be varied if desired
+lower = 2*np.pi*1e6
+# upper = 2*np.pi*1.5e6
+# num_freq = 5
+wz = lower #np.linspace(lower,upper,num_freq)
+
 # Here we'll make the DC and RF (pseudo)potentials
 RF = makeRF0(m,q,wr,Nr,Nz,Nrmid,dr)
 DC = makeDC(m,q,wz,Nz,Nr,Nzmid,dz)
 nullFields = np.zeros((Nr,Nz))
 print("constants set and modules imported") ; print("Simulation Size = ",Dr,"m in r ", Dz,"m in z")
 
-# Here we describe how the collisional particles work
-# they are a list of lists where the first index is the particle identifier
-# the second index gives r,z,vr,vz,q,m,a (dipole moment)
 aH2 = 8e-31 # dipole moment of H2 in SI units
 mH2 = 2.0*amu # mass of H2 in kg
 
@@ -63,54 +67,73 @@ l = 1 ; dsepz = 2*(620+1)*dz # starting separation between ions in virtual units
 vbumpr = 0.00e0 ; vbumpz = -0.0e0 # starting velocity in r and z of the lth ion in the chain
 offsetz = 0.0e-7 ; offsetr = 0.0e-8 # starting distance from eq. in r and z of the lth ion in the chain
 
-lower = 2*np.pi*1e6
-upper = 2*np.pi*1.5e6
-wz = np.linspace(lower,lower,1)
 
-Ni = np.linspace(2,2,1) # number of trapped ions to loop over. must give whole integers
-Ni = np.round(Ni).astype(int) 
+"""
+    Here we define the simulation parameters that will be chosen randomly. These are,
+    Ni: how many ions in the crystal
+    Nc: how many collisional particles. currently only supports Nc = 1
+    vMin,vMax: The range of velocities that the collisional particle can have
+    T: Temperature of the system. This is used to determine the probability of the collisional particle being at a given velocity in the range
+    collisionalMass: Mass of the collisional particle in amu
+    numBins: how many points for the velocity
+    angles: range of angles for impact. currently only supports -np.pi/2 to np.pi/2
+    offsets: how much offset from a direct collision the collisional particle will have
+    max hypotenuse: defines how far away the collisional particle starts from the ion. This should be chosen based on the size of the simulation space
+"""
 
 Ni = 2
+vf = makeVf(Ni,1.0*q,m,l,wz,offsetr,offsetz,vbumpr,vbumpz) #ignore offsetr/z,vbumpr/z for now
 Nc = 1
 T = 300
+collisionalMass = 2
 vMin = 50
 vMax = 7000
 numBins = 1000
-shots = 1000
-
-boltzDist = Boltz(2,T,vMin,vMax,numBins)
+boltzDist = Boltz(collisionalMass,T,vMin,vMax,numBins)
 v = np.linspace(vMin,vMax,numBins)
-velocity = random.choices(v,weights=boltzDist)[0]
-
 angles = np.linspace(-np.pi/2,np.pi/2,100)
-angle_choice = random.choice(angles)
-
 offsets = np.linspace(-2e-9,2e-9,200)
-offset_choice = random.choice(offsets)
+max_hypotenuse = 1.5e-5
 
-ion_collided = random.randint(0,Ni-1)
 
-if velocity < 200:
-    Nt = 700000
-elif velocity < 1500:
-    Nt = 400000
-else:
-    Nt = 250000
+shots = 10
+start_time = time.perf_counter()
+f = open("output.txt", "w")
+f.write("axial trapping frequency (MHz) \t velocity(m/s) \t #ions \t ion collided with \t collision offset(m) \t reorder? (1 is reorder 2 is ejection) \n")
 
-vf = makeVf(Ni,1.0*q,m,l,wz,offsetr,offsetz,vbumpr,vbumpz)
+for i in shots:
+    #randomly chooses parameters for the run
+    velocity = random.choices(v,weights=boltzDist)[0]
+    angle_choice = random.choice(angles)
+    offset_choice = random.choice(offsets)
+    ion_collided = random.randint(0,Ni-1)
 
-max_hypotenuse = 1.5e-5 #limit the distance of the initial position of the collisional particle. this should be choosen based on the size of the simulation space
-r = -np.cos(angle_choice)*max_hypotenuse
-z = vf[ion_collided,1] + np.sin(angle_choice)*max_hypotenuse + offset_choice
-vz=-1*velocity*np.sin(angle_choice) ; vr = np.abs(velocity*np.cos(angle_choice))
+    #time allocated per run is based on the speed of the collisional particle
+    if velocity < 200:
+        Nt = 700000
+    elif velocity < 1500:
+        Nt = 400000
+    else:
+        Nt = 250000
 
-print("ion collided with = ",ion_collided+1); print("additional offset = ",offset_choice)
-print("angle = ",angle_choice); print("velocity = ",velocity)
+    r = -np.cos(angle_choice)*max_hypotenuse
+    z = vf[ion_collided,1] + np.sin(angle_choice)*max_hypotenuse + offset_choice
+    vz=-1*velocity*np.sin(angle_choice) ; vr = np.abs(velocity*np.cos(angle_choice))
 
-rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls,reorder = mcCollision(vf,r,z,vr,vz,q,mH2,aH2,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,dtCollision) 
+    rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls,reorder = mcCollision(vf,r,z,vr,vz,q,mH2,aH2,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,dtCollision) 
+
+    output = str(wz) +"\t" + str(velocity)+"\t"+str(ion_collided)+"\t"+str(offset_choice)+"\t"+str(reorder)+"\n"
+    f.write(output)
+
+finish_time = time.perf_counter()
+timeTaken = finish_time - start_time
+
+f.close()
+print("Completed Succesfully! It took " + timeTaken + " seconds!")
+
 
 #plots the results of the simulation. only use for single runs
-plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,0,100000,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-2e-5,2e-5,-4e-5,4e-5)
+#plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,0,100000,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-2e-5,2e-5,-4e-5,4e-5)
 
 #plots a zoomed in image of the collision on a single ion
 #plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,1000,Nt,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-.25e-5,.25e-5,.25e-5,.5e-5)
