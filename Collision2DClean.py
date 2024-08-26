@@ -1,10 +1,7 @@
 #2D ion collision simulation code in python. currently there is an issue with low speed collisions that I do not believe was present in earlier
 #iterations. Currently trying to debug this.
 
-import sys
-sys.path.append("/Users/caleb/Desktop/SQRL/ReorderSimulation")
-
-from ..tools.IonChainTools import * # type: ignore
+from tools.IonChainTools import * # type: ignore
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -371,8 +368,8 @@ def mcCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,d
     Nt,Nr,Nz are the number of time steps and cells in each dimension
     dt,dr,dz,dvr,dvz are the time step, cell size, and speed for 1cell/1timestep
     Er,Ez are the background electric fields both radially and axially
-    vl,I0,nul,dnul,nu0,A,Ti are laser cooling parameters
-    dtLarge is the timestep when no particles are closer than dCutOut, dtMid when none closer than dCutIn, dtSmall is the timestep when at least one is inside dCutIn
+    dtLarge is the timestep when no collisional particle is in the simulation, 
+    dtCollision is the minimum timestep that can be used when a collision is actively occuring, dtSmall is all other cases. 
     """
     reorder = 0
     # Start by defining some constants
@@ -383,9 +380,7 @@ def mcCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,d
     vrs = np.zeros((Ni,Nt)); vzs = np.zeros((Ni,Nt)); aveSpeeds = np.zeros((2,Nt))
     rcolls = np.zeros((Nc,Nt)); zcolls = np.zeros((Nc,Nt)); vrcolls = np.zeros((Nc,Nt)); vzcolls = np.zeros((Nc,Nt)) 
     # we assume that the collisional particle was initialized far enough away to be in the large distance scale zone
-    dtLast = dtLarge; dtNow = dtSmall
-    dvr = dr/dtNow; dvz = dz/dtNow
-    crossTest = 0 # means our ions have not yet crossed paths
+    dtNow = dtSmall
     nullFields = np.zeros((Nr,Nz))
     for i in range(Nt):       
         # Now we apply the time step calculation
@@ -423,17 +418,18 @@ def mcCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,d
             vc[:,0] = 0.0; vc[:,1] = 0.0; vc[:,2] = 0.0; vc[:,3] = 0.0; vc[:,4] = 0.0; vc[:,5] = 1e1; vc[:,6] = 0.0
             break
         if np.sum(vf[:,5])>1e5: # end sim if ion leaves
-            print("Ion Ejected") ; print("vf = ",vf) ; print("i = ",i)
+            #print("Ion Ejected") ; print("vf = ",vf) ; print("i = ",i)
             reorder += 2
             break
+            #return reorder
         for j in range(1,Ni):
-            if zs[j,i]>zs[j-1,i] and crossTest<1: # end sim if neighboring ions have reordered
+            if zs[j,i]>zs[j-1,i]: # end sim if neighboring ions have reordered
                 reorder += 1
-                crossTest+=1
                 #print("Crossing at timestep ",i," of ion ",j) 
                 Nt = i+1000 # do 5000 more time steps after a crossing is detected
-#                 break
+                #break
+                #return reorder
         #if crossTest>0:
         #    break
-    #return rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls, reorder
-    return reorder
+    return rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls, reorder
+    #return reorder
