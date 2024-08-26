@@ -1,5 +1,10 @@
 """
-
+    This script is used to run a monte carlo simulation of a collision between a trapped ion and a collisional particle. 
+    Currently of interest is to see how the cell size and timestep size impacts the results of the simulation.
+    The parameters to change are:
+    Nr/Nz: The number of cells in the radial and axial directions
+    Dr/Dz: The physical size of the simulation space in the radial and axial directions
+    dtSmall/dtCollision/dtLarge: The time step sizes for the simulation
 """
 from Collision2DClean import *
 from scipy import special
@@ -134,11 +139,3 @@ timeTaken = finish_time - start_time
 
 f.close()
 print("Completed Succesfully! It took " + str(timeTaken) + " seconds!")
-
-
-#plots the results of the simulation. only use for single runs
-#plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,0,100000,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-2e-5,2e-5,-4e-5,4e-5)
-
-#plots a zoomed in image of the collision on a single ion
-#plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,1000,Nt,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-.25e-5,.25e-5,.25e-5,.5e-5)
-

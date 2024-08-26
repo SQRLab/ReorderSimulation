@@ -106,4 +106,3 @@ plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,0,100000,"H2 Collides with Trapped Ca+",
 
 #plots a zoomed in image of the collision on a single ion
 plotPieceWise(Nc,Ni,rcolls,rs,zcolls,zs,1000,Nt,"H2 Collides with Trapped Ca+","Radial Position(m)","Axial Position (m)",-.25e-5,.25e-5,.25e-5,.5e-5)
-
