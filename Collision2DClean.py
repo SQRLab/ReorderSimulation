@@ -421,15 +421,13 @@ def mcCollision(vf,rc,zc,vrc,vzc,qc,mc,ac,Nt,dtSmall,RF,DC,Nr,Nz,dr,dz,dtLarge,d
             #print("Ion Ejected") ; print("vf = ",vf) ; print("i = ",i)
             reorder += 2
             break
-            #return reorder
         for j in range(1,Ni):
             if zs[j,i]>zs[j-1,i]: # end sim if neighboring ions have reordered
                 reorder += 1
                 #print("Crossing at timestep ",i," of ion ",j) 
                 Nt = i+1000 # do 5000 more time steps after a crossing is detected
                 #break
-                #return reorder
         #if crossTest>0:
         #    break
-    return rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls, reorder
-    #return reorder
+    #return rs,zs,vrs,vzs,rcolls,zcolls,vrcolls,vzcolls, reorder
+    return reorder
